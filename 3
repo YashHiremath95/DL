@@ -1,0 +1,53 @@
+import tensorflow as tf
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Load the MNIST dataset
+mnist = tf.keras.datasets.mnist
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+# Normalize pixel values to be between 0 and 1
+x_train, x_test = x_train / 255.0, x_test / 255.0
+
+# Reshape the input data to include the channel dimension (grayscale)
+x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
+x_test = x_test.reshape(x_test.shape[0], 28, 28, 1)
+
+# Define the CNN model
+model = tf.keras.models.Sequential([
+    tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)),
+    tf.keras.layers.MaxPooling2D((2, 2)),
+    tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+    tf.keras.layers.MaxPooling2D((2, 2)),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(10)
+])
+
+# Compile the model
+loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+model.compile(optimizer='adam',
+              loss=loss_fn,
+              metrics=['accuracy'])
+
+# Train the model
+model.fit(x_train, y_train, epochs=5)
+
+# Evaluate the model
+model.evaluate(x_test, y_test.reshape(x_test.shape[0],1), verbose=2)
+
+# Visualize predictions
+predictions = model.predict(x_test)
+predictions_classes = np.argmax(predictions, axis=1)
+
+# Display some test images and their predictions
+num_images = 10
+indices = np.random.choice(len(x_test), num_images, replace=False)
+
+plt.figure(figsize=(15, 5))
+for i, idx in enumerate(indices):
+    plt.subplot(1, num_images, i + 1)
+    plt.imshow(x_test[idx].squeeze(), cmap='gray')
+    plt.title(f"Pred: {predicted_classes[idx]}\nTrue: {y_test[idx]}")
+    plt.axis('off')
+plt.show()
